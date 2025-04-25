@@ -8,6 +8,7 @@ export default defineConfig({
         './dist',
         '**/node_modules/**',
         '**/index.ts',
+        '**/main/adapters/**',
         'vite.config.mts',
         'commitlint.config.js',
         'eslint.config.mjs',
