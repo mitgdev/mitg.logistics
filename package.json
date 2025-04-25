@@ -8,6 +8,11 @@
   "author": "",
   "license": "ISC",
   "scripts": {
+    "build": "tsup",
+    "start:dev": "tsx watch --clear-screen=false src/index.ts",
+    "start:prod": "node dist/index.js",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
     "lint": "eslint \"src/**/*.+(ts|js)\"",
     "format": "prettier --ignore-path .gitignore \"src/**/*.+(ts|js)\" --write",
     "postinstall": "husky install"
@@ -36,6 +41,7 @@
     "eslint-plugin-prettier": "^5.2.6",
     "globals": "^16.0.0",
     "husky": "^9.1.7",
+    "tsx": "4.19.3",
     "prettier": "^3.5.3",
     "supertest": "^7.1.0",
     "tsup": "^8.4.0",
