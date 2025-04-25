@@ -4,7 +4,14 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     coverage: {
-      exclude: ['**/node_modules/**', '**/index.ts, ', 'vite.config.mts'],
+      exclude: [
+        './dist',
+        '**/node_modules/**',
+        '**/index.ts',
+        'vite.config.mts',
+        'commitlint.config.js',
+        'eslint.config.mjs',
+      ],
     },
     globals: true,
     restoreMocks: true,

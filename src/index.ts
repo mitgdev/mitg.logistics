@@ -1,20 +1,29 @@
-import { app } from '@/server'
+import { env } from './environment'
 
-const server = app.listen(3000, () => {
-  console.log('Server is running on port 3000')
-  console.log('http://localhost:3000')
-  console.log('Press Ctrl+C to stop the server')
-})
+async function main() {
+  const app = (await import('@/main/config/app')).default
 
-const onCloseSignal = () => {
-  console.log('Received shutdown signal, shutting down gracefully...')
-  server.close(() => {
-    console.log('Server closed')
-    process.exit()
+  const server = app.listen(env.PORT, () => {
+    console.log(
+      `Server (${env.NODE_ENV}) running on port http://${env.HOST}:${env.PORT}`,
+    )
   })
 
-  setTimeout(() => process.exit(1), 10000).unref() // Force shutdown after 10s
+  const onCloseSignal = () => {
+    console.log('Received shutdown signal, shutting down gracefully...')
+    server.close(() => {
+      console.log('Server closed')
+      process.exit()
+    })
+
+    setTimeout(() => process.exit(1), 10000).unref() // Force shutdown after 10s
+  }
+
+  process.on('SIGINT', onCloseSignal)
+  process.on('SIGTERM', onCloseSignal)
 }
 
-process.on('SIGINT', onCloseSignal)
-process.on('SIGTERM', onCloseSignal)
+main().catch((error) => {
+  console.error('Error starting the server:', error)
+  process.exit(1)
+})
