@@ -5,5 +5,9 @@ import { OrdersRouter } from '@/presentation/controllers/orders/orders.controlle
 import { upload } from '../middlewares/upload'
 
 export default (router: Router): void => {
-  router.post('/orders', upload.single('file'), adaptRoute(new OrdersRouter()))
+  /**
+   * @TODO - Implement a middleware to validate the fieldName is present in the request
+   * to return a customError and not a multerError
+   */
+  router.post('/orders', upload.array('files'), adaptRoute(new OrdersRouter()))
 }
