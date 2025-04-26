@@ -1,3 +1,4 @@
+import type { Clients } from '@/presentation/clients'
 import { Request, Response } from 'express'
 
 export type Context = {
@@ -7,6 +8,7 @@ export type Context = {
   method: string
   headers: Record<string, unknown>
   body?: unknown
+  clients: Clients
 }
 
 export type HttpResponse = {
