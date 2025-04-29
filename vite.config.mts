@@ -7,7 +7,7 @@ export default defineConfig({
       exclude: [
         './dist',
         '**/node_modules/**',
-        '**/index.ts',
+        './src/index.ts',
         '**/main/adapters/**',
         'vite.config.mts',
         'commitlint.config.js',

@@ -1,5 +1,5 @@
 import { ZodError } from 'zod'
-import { FileClient } from './file'
+import { FileClient } from '.'
 import fs from 'fs'
 
 const makeSut = () => {

@@ -1,7 +1,7 @@
 import type { Router } from 'express'
 
 import { adaptRoute } from '@/main/adapters/express/express-routes-adapter'
-import { OrdersRouter } from '@/presentation/controllers/orders/orders.controller'
+import { OrdersRouter } from '@/presentation/controllers/orders'
 import { upload } from '../middlewares/upload'
 
 export default (router: Router): void => {
