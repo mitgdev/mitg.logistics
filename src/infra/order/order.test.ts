@@ -1,9 +1,10 @@
 import { ZodError } from 'zod'
 import { OrderClient } from '.'
-import type {
-  OrderLayout,
-  ProcessedOrder,
-  UserOrder,
+import {
+  OrdersFiltersSchema,
+  type OrderLayout,
+  type ProcessedOrder,
+  type UserOrder,
 } from '@/data/protocols/order'
 
 const makeSut = () => {
@@ -207,6 +208,261 @@ describe('Order Client', () => {
       const result = sut.group(processedOrders)
 
       expect(result).toBeInstanceOf(ZodError)
+    })
+  })
+
+  describe('verifyFilters()', () => {
+    test('should return a ZodError if startDate or endDate is a empty string', () => {
+      const sut = makeSut()
+
+      const result = sut.verifyFilters({
+        startDate: '',
+        endDate: '',
+      })
+
+      expect(result).toBeInstanceOf(ZodError)
+    })
+
+    test('should return a ZodError if startDate or endDate is a invalid date', () => {
+      const sut = makeSut()
+
+      const result = sut.verifyFilters({
+        startDate: 'invalid date',
+        endDate: 'invalid date',
+      })
+
+      expect(result).toBeInstanceOf(ZodError)
+    })
+
+    test('should return a ZodError if orderId is not a number', () => {
+      const sut = makeSut()
+
+      const result = sut.verifyFilters({
+        orderId: 'invalid orderId',
+      })
+
+      expect(result).toBeInstanceOf(ZodError)
+    })
+
+    test('should error if only startDate is provided', () => {
+      const result = OrdersFiltersSchema.safeParse({ startDate: '2024-01-01' })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toBeInstanceOf(ZodError)
+        expect(
+          result.error.issues.some(
+            (issue) =>
+              issue.message ===
+              'Both startDate and endDate are required if one is provided',
+          ),
+        ).toBe(true)
+      }
+    })
+
+    test('should error if only endDate is provided', () => {
+      const result = OrdersFiltersSchema.safeParse({ endDate: '2024-01-01' })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toBeInstanceOf(ZodError)
+        expect(
+          result.error.issues.some(
+            (issue) =>
+              issue.message ===
+              'Both startDate and endDate are required if one is provided',
+          ),
+        ).toBe(true)
+      }
+    })
+
+    test('should error if startDate is after endDate', () => {
+      const result = OrdersFiltersSchema.safeParse({
+        startDate: '2024-02-01',
+        endDate: '2024-01-01',
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toBeInstanceOf(ZodError)
+        expect(
+          result.error.issues.some(
+            (issue) =>
+              issue.message ===
+              'startDate must be less than or equal to endDate',
+          ),
+        ).toBe(true)
+      }
+    })
+
+    test('should pass if startDate is equal to endDate', () => {
+      const result = OrdersFiltersSchema.safeParse({
+        startDate: '2024-01-01',
+        endDate: '2024-01-01',
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.startDate).toEqual(new Date('2024-01-01'))
+        expect(result.data.endDate).toEqual(new Date('2024-01-01'))
+      }
+    })
+
+    test('should pass if startDate is before endDate', () => {
+      const result = OrdersFiltersSchema.safeParse({
+        startDate: '2024-01-01',
+        endDate: '2024-02-01',
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.startDate).toEqual(new Date('2024-01-01'))
+        expect(result.data.endDate).toEqual(new Date('2024-02-01'))
+      }
+    })
+
+    test('should transform a numeric string orderId to number', () => {
+      const result = OrdersFiltersSchema.safeParse({ orderId: '123' })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.orderId).toBe(123)
+      }
+    })
+  })
+
+  describe('getOrderBetweenDates()', () => {
+    test('should return a user order between dates', () => {
+      const sut = makeSut()
+
+      const date = new Date('2024-01-01')
+
+      const processedOrders: ProcessedOrder[] = [
+        {
+          userId: 1,
+          userName: 'Alice',
+          orderId: 10,
+          productId: 100,
+          value: 50.0,
+          purchaseDate: date,
+        },
+        {
+          userId: 2,
+          userName: 'Bob',
+          orderId: 11,
+          productId: 101,
+          value: 60.0,
+          purchaseDate: new Date('2024-01-02'),
+        },
+      ]
+
+      const grouped = sut.group(processedOrders) as UserOrder[]
+
+      const result = sut.getOrderBetweenDates(date, date, grouped)
+
+      console.log('result', result)
+
+      expect(result).not.toBeInstanceOf(ZodError)
+      expect(result).toMatchObject([
+        {
+          user_id: 2,
+          user_name: 'Bob',
+          orders: [
+            {
+              order_id: 11,
+              total: 60.0,
+              date: '2024-01-01',
+              products: [{ product_id: 101, value: 60.0 }],
+            },
+          ],
+        },
+      ])
+    })
+
+    test('should return a empty array if no orders are found', () => {
+      const sut = makeSut()
+
+      const date = new Date('2024-01-01')
+
+      const processedOrders: ProcessedOrder[] = [
+        {
+          userId: 1,
+          userName: 'Alice',
+          orderId: 10,
+          productId: 100,
+          value: 50.0,
+          purchaseDate: date,
+        },
+        {
+          userId: 2,
+          userName: 'Bob',
+          orderId: 11,
+          productId: 101,
+          value: 60.0,
+          purchaseDate: new Date('2024-01-02'),
+        },
+      ]
+
+      const grouped = sut.group(processedOrders) as UserOrder[]
+
+      const result = sut.getOrderBetweenDates(
+        new Date('2024-01-03'),
+        new Date('2024-01-04'),
+        grouped,
+      )
+
+      expect(result).not.toBeInstanceOf(ZodError)
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('getOrderById()', () => {
+    const date = new Date('2024-01-01')
+
+    const processedOrders: ProcessedOrder[] = [
+      {
+        userId: 1,
+        userName: 'Alice',
+        orderId: 10,
+        productId: 100,
+        value: 50.0,
+        purchaseDate: date,
+      },
+      {
+        userId: 2,
+        userName: 'Bob',
+        orderId: 11,
+        productId: 101,
+        value: 60.0,
+        purchaseDate: new Date('2024-01-02'),
+      },
+    ]
+
+    test('should return a user order by id', () => {
+      const sut = makeSut()
+
+      const grouped = sut.group(processedOrders) as UserOrder[]
+
+      const result = sut.getOrderById(11, grouped)
+
+      expect(result).not.toBeInstanceOf(ZodError)
+      expect(result).toMatchObject({
+        user_id: 2,
+        user_name: 'Bob',
+        orders: [
+          {
+            order_id: 11,
+            total: 60.0,
+            date: '2024-01-01',
+            products: [{ product_id: 101, value: 60.0 }],
+          },
+        ],
+      })
+    })
+
+    test('should return a empty array if no orders are found', () => {
+      const sut = makeSut()
+
+      const grouped = sut.group(processedOrders) as UserOrder[]
+
+      const result = sut.getOrderById(12, grouped)
+
+      expect(result).toBe(undefined)
     })
   })
 })

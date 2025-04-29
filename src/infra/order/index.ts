@@ -1,6 +1,8 @@
 import {
+  OrdersFiltersSchema,
   ProcessedOrderSchema,
   type OrderLayout,
+  type OrdersFilters,
   type ProcessedOrder,
   type ProtocolOrder,
   type UserOrder,
@@ -170,5 +172,75 @@ export class OrderClient implements ProtocolOrder {
     })
 
     return userOrders
+  }
+
+  verifyFilters(filters: Record<string, unknown>): OrdersFilters | ZodError {
+    if (filters?.startDate == '' || filters?.endDate == '') {
+      return new ZodError([
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          received: 'undefined',
+          message: 'startDate or endDate cannot be empty strings',
+          path: ['startDate', 'endDate'],
+          fatal: true,
+        },
+      ])
+    }
+
+    const parsedFilters = OrdersFiltersSchema.safeParse(filters)
+
+    if (!parsedFilters.success) {
+      return parsedFilters.error
+    }
+
+    return parsedFilters.data
+  }
+
+  getOrderById(id: number, orders: UserOrder[]): UserOrder | undefined {
+    for (const userOrder of orders) {
+      const order = userOrder.orders.find((o) => o.order_id === id)
+
+      if (order) {
+        return {
+          user_id: userOrder.user_id,
+          user_name: userOrder.user_name,
+          orders: [
+            {
+              order_id: order.order_id,
+              total: order.total,
+              date: order.date,
+              products: order.products,
+            },
+          ],
+        }
+      }
+    }
+    return undefined
+  }
+
+  getOrderBetweenDates(
+    startDate: Date,
+    endDate: Date,
+    userOrders: UserOrder[],
+  ): UserOrder[] {
+    return userOrders
+      .map((userOrder) => {
+        const orders = userOrder.orders.filter((order) => {
+          const orderDate = new Date(order.date)
+          return orderDate >= startDate && orderDate <= endDate
+        })
+
+        if (orders.length === 0) {
+          return undefined
+        }
+
+        return {
+          user_id: userOrder.user_id,
+          user_name: userOrder.user_name,
+          orders: orders,
+        }
+      })
+      .filter((userOrder) => userOrder !== undefined) as UserOrder[]
   }
 }

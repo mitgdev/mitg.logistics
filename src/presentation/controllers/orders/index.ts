@@ -20,6 +20,12 @@ export const orderLayout: OrderLayout = [
 export class OrdersRouter implements Controller {
   async handle(ctx: Context): Promise<HttpResponse> {
     try {
+      const filters = ctx.clients.order.verifyFilters(ctx.req.query)
+
+      if (filters instanceof ZodError) {
+        return badRequest(filters)
+      }
+
       const files = ctx.clients.file.verify(
         ['text/plain'],
         ctx.req.files as Express.Multer.File[] | undefined,
@@ -40,13 +46,35 @@ export class OrdersRouter implements Controller {
         return badRequest(processedOrders)
       }
 
-      const usersOrders = ctx.clients.order.group(processedOrders)
+      let usersOrders = ctx.clients.order.group(processedOrders)
 
       if (usersOrders instanceof ZodError) {
         return badRequest(usersOrders)
       }
 
-      return ok(usersOrders)
+      if (filters.startDate && filters.endDate) {
+        const startDate = filters.startDate
+        const endDate = filters.endDate
+
+        usersOrders = ctx.clients.order.getOrderBetweenDates(
+          startDate,
+          endDate,
+          usersOrders,
+        )
+      }
+
+      if (filters.orderId) {
+        const userOrder = ctx.clients.order.getOrderById(
+          filters.orderId,
+          usersOrders,
+        )
+
+        usersOrders = userOrder ? [userOrder] : []
+      }
+
+      return ok({
+        data: usersOrders,
+      })
     } catch (error) {
       return serverError(error, ctx.url)
     }
