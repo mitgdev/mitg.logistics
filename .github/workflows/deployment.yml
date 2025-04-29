@@ -1,0 +1,19 @@
+name: Deploy
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Deploy MITG Logistics
+        run: curl https://host.mitg.gg/api/box/deploy/${{secrets.DEPLOYMENT_TOKEN}}
