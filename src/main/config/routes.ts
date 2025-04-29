@@ -1,14 +1,10 @@
 import { Router, type Express } from 'express'
-import { readdirSync } from 'fs'
+import { setupOrdersRoutes } from '@/main/routes/orders.routes'
 
 export function setupRoutes(app: Express) {
   const router = Router()
 
   app.use('/api', router)
 
-  readdirSync(`${__dirname}/../routes`).map(async (file) => {
-    if (!file.includes('.test.') && !file.endsWith('.map')) {
-      ;(await import(`../routes/${file}`)).default(router)
-    }
-  })
+  setupOrdersRoutes(router)
 }
