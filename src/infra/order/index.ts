@@ -151,11 +151,14 @@ export class OrderClient implements ProtocolOrder {
 
       const orderGroup = user.orders.get(orderId)!
 
-      orderGroup.total += value
+      const fixedValue = parseFloat(value.toFixed(2))
+
+      orderGroup.total += fixedValue
+      orderGroup.total = parseFloat(orderGroup.total.toFixed(2))
 
       orderGroup.products.push({
         product_id: productId,
-        value: value,
+        value: fixedValue,
       })
     }
 
