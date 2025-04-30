@@ -140,8 +140,7 @@ pnpm test:coverage
 
 Combinações de filtros:
 
-- `?order_id=123&startDate=2021-01-01`
-- `?order_id=123&endDate=2021-12-31`
+- `?order_id=123`
 - `?startDate=2021-01-01&endDate=2021-12-31`
 - `?order_id=123&startDate=2021-01-01&endDate=2021-12-31`
 
