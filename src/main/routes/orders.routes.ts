@@ -2,7 +2,7 @@ import type { Router } from 'express'
 
 import { adaptRoute } from '@/main/adapters/express/express-routes-adapter'
 import { OrdersRouter } from '@/presentation/controllers/orders'
-import { upload } from '../middlewares/upload'
+import { upload } from '@/main/middlewares/upload'
 
 export const setupOrdersRoutes = (router: Router): void => {
   console.log('Setting up orders routes')
