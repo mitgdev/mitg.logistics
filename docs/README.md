@@ -4,6 +4,14 @@ Esse aplicativo visa receber um conjunto de arquivos em formato TXT/Text-Plain, 
 
 A partir desse arquivo deve se retornar um JSON com os dados estruturados e tratados, prontos para serem utilizados em uma integração.
 
+## Ambiente de Produção
+
+O projeto está hospedado e online, podendo ser acessado através do seguinte link:
+
+[https://tribo.mitg.dev](https://tribo.mitg.dev)
+
+A API está disponível em `/api/orders`, e pode ser acessada através de um cliente HTTP, como o Postman ou o Insomnia.
+
 ## Estrutura do projeto
 
 ```bash
@@ -61,6 +69,8 @@ O projeto conta com um pipeline de CI/CD, que realiza o deploy automático da br
 - PNPM (ou NPM/Yarn) - `Recomendado o PNPM`
 
 ### Env
+
+> Vale ressaltar a utilização de biblioteca `envalid` para validação das variáveis de ambiente, garantindo que as mesmas estejam corretas e evitando erros de configuração.
 
 - Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
 
