@@ -223,3 +223,17 @@ A datas seguem o formate `YYYY-MM-DD`, e o `order_id` é um número inteiro. Sen
   - O `pnpm` é um gerenciador de pacotes mais rápido e eficiente, que utiliza um cache global para evitar a duplicação de dependências. Isso resulta em uma instalação mais rápida e um uso mais eficiente do espaço em disco.
 - Por que da utilização do `vite`?
   - O `vite` é um bundler moderno que oferece uma experiência de desenvolvimento mais rápida e eficiente, com recarregamento instantâneo e otimizações para produção. Ele é especialmente útil para projetos em TypeScript, pois oferece suporte nativo a esse tipo de projeto.
+
+## Vale a pena ler
+
+Durante a implementação faço a utilização da biblioteca `zod` para a validação dos dados, desde entrada até a saída e também gerando erros
+para manter a consistência.
+
+Em um momento fiz a implementação de função `safeParseAsync` para evitar o uso de `try/catch`, mas encontrei um problema assim que implementei essa função a resposta da API teve um aumento significativo no tempo de resposta, o que não era esperado em torno de `500ms` a mais.
+
+Isso ocorreu porque a função `safeParseAsync` retorna uma `Promise`, o que faz com que o código fique aguardando a resolução da `Promise` antes de continuar a execução e essa promise tem um custo alto de processamento quando tem um volume muito grande de dados como um lista de pedidos.
+
+A solução foi nao utilizar o `safeParseAsync` e sim o `safeParse` que não retorna uma `Promise`, o que faz com que o código continue a execução sem aguardar a resolução da `Promise`.
+
+Mas por que isso acontece ?
+A função `safeParseAsync` depende de duas funções internas bem custosas que impactam o desempenho da biblioteca, que são `transform` e `refine` que podem ser incluídos na criação do schema. Com elas o `zod` nao apenas pode validar mas também manipular o valor de entrada, o que pode ser muito custoso em termos de desempenho.
